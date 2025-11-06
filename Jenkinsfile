@@ -22,18 +22,17 @@ pipeline {
             }
         }
 
-        stage('Test') {
+       stage('Test') {
             steps {
-                // Ejecuta el proyecto de test con logger xUnit compatible con Jenkins
-                bat 'dotnet test testlogin/testlogin.csproj --no-build --configuration Release --logger "xunit;LogFileName=test_results.xml" --logger "console;verbosity=detailed"'
+                bat 'dotnet test testLogin/testLogin.csproj --no-build --configuration Release --logger "xunit;LogFileName=test_results.xml"'
             }
-            post {
-                always {
-                    // Publica los resultados de prueba en Jenkins
-                    junit '**/test_results/*.xml'
-                }
-            }
+                post {
+                    always {
+                // Publica los resultados de prueba en Jenkins
+                junit "test_results.xml"
         }
+    }
+}
     }
 
     post {
