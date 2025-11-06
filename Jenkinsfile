@@ -29,8 +29,11 @@ pipeline {
                         bat 'if exist TestResults rmdir /s /q TestResults'
                         bat 'mkdir TestResults'
                         
-                        // USAR EL LOGGER CORRECTO para xUnit
-                        bat 'dotnet test testLogin/testLogin.csproj --configuration Release --logger "xunit;LogFilePath=TestResults/test_results.xml"'
+                        // USAR TRX LOGGER (siempre disponible)
+                        bat 'dotnet test testLogin/testLogin.csproj --configuration Release --logger "trx;LogFileName=TestResults/results.trx"'
+                        
+                        // Verificar que se creó el archivo
+                        bat 'if exist TestResults\\results.trx (echo "✅ Archivo TRX creado") else (echo "❌ Archivo TRX NO creado")'
                         
                     } catch (Exception e) {
                         echo "Tests fallaron: ${e.getMessage()}"
@@ -39,7 +42,8 @@ pipeline {
             }
             post {
                 always {
-                    junit allowEmptyResults: true, testResults: "TestResults/test_results.xml"
+                    // Jenkins puede leer archivos TRX
+                    junit allowEmptyResults: true, testResults: "TestResults/*.trx"
                 }
             }
         }
