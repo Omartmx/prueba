@@ -17,21 +17,28 @@ pipeline {
 
         stage('Build') {
             steps {
+                // Compilar TODOS los proyectos incluyendo el de test
                 bat 'dotnet build --no-restore --configuration Release'
+                
+                // Verificar que el proyecto de test se compiló
+                bat 'dir testLogin\\bin\\Release /s'
             }
         }
 
         stage('Test') {
             steps {
-                // Primero verificar que el proyecto de test existe
-                bat 'dir testLogin\\ /s'
+                // Crear directorio para resultados
+                bat 'if exist TestResults rmdir /s /q TestResults'
+                bat 'mkdir TestResults'
                 
-                // Ejecutar tests con configuración corregida
-                bat 'dotnet test testLogin/testLogin.csproj --no-build --configuration Release --logger "xunit;LogFilePath=TestResults/test_results.xml"'
+                // Ejecutar tests SIN --no-build para asegurar que se compila
+                bat 'dotnet test testLogin/testLogin.csproj --configuration Release --logger "xunit;LogFilePath=TestResults/test_results.xml"'
+                
+                // Verificar si se creó el archivo de resultados
+                bat 'if exist TestResults\\test_results.xml (echo "✅ Archivo de resultados creado") else (echo "❌ Archivo de resultados NO creado")'
             }
             post {
                 always {
-                    // Publica los resultados de prueba en Jenkins
                     junit "TestResults/test_results.xml"
                 }
             }
