@@ -17,10 +17,7 @@ pipeline {
 
         stage('Build') {
             steps {
-                // Compilar TODOS los proyectos incluyendo tests
                 bat 'dotnet build --no-restore --configuration Release'
-                
-                // Verificar específicamente que el proyecto de test se compiló
                 bat 'if exist testLogin\\bin\\Release\\net9.0\\testLogin.dll (echo "✅ testLogin.dll compilado") else (echo "❌ testLogin.dll NO compilado")'
             }
         }
@@ -29,22 +26,19 @@ pipeline {
             steps {
                 script {
                     try {
-                        // Crear directorio para resultados
                         bat 'if exist TestResults rmdir /s /q TestResults'
                         bat 'mkdir TestResults'
                         
-                        // Compilar y ejecutar tests (SIN --no-build)
+                        // USAR EL LOGGER CORRECTO para xUnit
                         bat 'dotnet test testLogin/testLogin.csproj --configuration Release --logger "xunit;LogFilePath=TestResults/test_results.xml"'
                         
                     } catch (Exception e) {
                         echo "Tests fallaron: ${e.getMessage()}"
-                        // Continuar para intentar publicar resultados
                     }
                 }
             }
             post {
                 always {
-                    // Publicar resultados aunque estén vacíos
                     junit allowEmptyResults: true, testResults: "TestResults/test_results.xml"
                 }
             }
