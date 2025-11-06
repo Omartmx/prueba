@@ -1,14 +1,12 @@
 pipeline {
     agent any
 
-    environment {
-        PATH = "C:\\Program Files\\dotnet;${env.PATH}"
-    }
-
     stages {
+
         stage('Check .NET version') {
             steps {
                 bat 'dotnet --version'
+                bat 'dotnet --list-sdks'
             }
         }
 
@@ -26,25 +24,24 @@ pipeline {
 
         stage('Test') {
             steps {
-                // Ejecuta todas las pruebas y genera archivo de resultados
-                bat 'dotnet test --no-build --configuration Release --logger "trx;LogFileName=test_results.trx"'
+                // Ejecuta el proyecto de test con logger xUnit compatible con Jenkins
+                bat 'dotnet test testlogin/testlogin.csproj --no-build --configuration Release --logger "xunit;LogFileName=test_results.xml" --logger "console;verbosity=detailed"'
             }
             post {
                 always {
-                    // Publica los resultados de test en Jenkins
-                    junit '**/TestResults/*.xml'
+                    // Publica los resultados de prueba en Jenkins
+                    junit '**/test_results.xml'
                 }
             }
         }
     }
 
     post {
-        success {
-            echo "✅ Build y pruebas completadas correctamente."
-        }
         failure {
             echo "❌ Falló la compilación o las pruebas."
         }
+        success {
+            echo "✅ Todas las pruebas pasaron exitosamente."
+        }
     }
 }
-
