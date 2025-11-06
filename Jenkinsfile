@@ -17,8 +17,8 @@ pipeline {
 
         stage('Build') {
             steps {
-                // Compilar TODOS los proyectos incluyendo el de test
-                bat 'dotnet build --no-restore --configuration Release'
+                // Compilar específicamente el proyecto de test también
+                bat 'dotnet build testLogin/testLogin.csproj --no-restore --configuration Release'
                 
                 // Verificar que el proyecto de test se compiló
                 bat 'dir testLogin\\bin\\Release /s'
@@ -31,7 +31,7 @@ pipeline {
                 bat 'if exist TestResults rmdir /s /q TestResults'
                 bat 'mkdir TestResults'
                 
-                // Ejecutar tests SIN --no-build para asegurar que se compila
+                // Ejecutar tests
                 bat 'dotnet test testLogin/testLogin.csproj --configuration Release --logger "xunit;LogFilePath=TestResults/test_results.xml"'
                 
                 // Verificar si se creó el archivo de resultados
