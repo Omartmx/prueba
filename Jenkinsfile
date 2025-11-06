@@ -29,9 +29,14 @@ pipeline {
                         // Limpiar resultados anteriores
                         bat 'if exist TestResults rmdir /s /q TestResults'
                         bat 'if exist testLogin\\TestResults rmdir /s /q testLogin\\TestResults'
+                        bat 'if exist testlogin\\TestResults rmdir /s /q testlogin\\TestResults'
                         
                         // Ejecutar tests
                         bat 'dotnet test testLogin/testLogin.csproj --configuration Release --logger "trx;LogFileName=results.trx"'
+                        
+                        // Diagnóstico: ver dónde se guardó el archivo
+                        bat 'echo === VERIFICANDO ARCHIVOS TRX ==='
+                        bat 'dir /s *.trx'
                         
                     } catch (Exception e) {
                         echo "Tests fallaron: ${e.getMessage()}"
@@ -40,8 +45,8 @@ pipeline {
             }
             post {
                 always {
-                    // Usar la ruta EXACTA donde se guarda el TRX
-                    junit testResults: "testLogin/TestResults/results.trx"
+                    // Buscar en TODAS las ubicaciones posibles con patrón global
+                    junit testResults: "**/results.trx"
                 }
             }
         }
