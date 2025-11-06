@@ -18,7 +18,6 @@ pipeline {
         stage('Build') {
             steps {
                 bat 'dotnet build --no-restore --configuration Release'
-                bat 'if exist testLogin\\bin\\Release\\net9.0\\testLogin.dll (echo "✅ testLogin.dll compilado") else (echo "❌ testLogin.dll NO compilado")'
             }
         }
 
@@ -28,15 +27,19 @@ pipeline {
                     try {
                         // Limpiar resultados anteriores
                         bat 'if exist TestResults rmdir /s /q TestResults'
-                        bat 'if exist testLogin\\TestResults rmdir /s /q testLogin\\TestResults'
                         bat 'if exist testlogin\\TestResults rmdir /s /q testlogin\\TestResults'
                         
                         // Ejecutar tests
                         bat 'dotnet test testLogin/testLogin.csproj --configuration Release --logger "trx;LogFileName=results.trx"'
                         
-                        // Diagnóstico: ver dónde se guardó el archivo
-                        bat 'echo === VERIFICANDO ARCHIVOS TRX ==='
-                        bat 'dir /s *.trx'
+                        // Instalar tool para convertir TRX a JUnit
+                        bat 'dotnet tool install -g trx2junit || echo "Tool ya instalada"'
+                        
+                        // Convertir TRX a JUnit XML
+                        bat 'trx2junit testlogin\\TestResults\\results.trx'
+                        
+                        // Verificar archivos generados
+                        bat 'dir /s *.xml'
                         
                     } catch (Exception e) {
                         echo "Tests fallaron: ${e.getMessage()}"
@@ -45,8 +48,8 @@ pipeline {
             }
             post {
                 always {
-                    // Buscar en TODAS las ubicaciones posibles con patrón global
-                    junit testResults: "**/results.trx"
+                    // Usar el archivo JUnit convertido
+                    junit testResults: "**/results.xml"
                 }
             }
         }
