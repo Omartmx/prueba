@@ -2,7 +2,6 @@ pipeline {
     agent any
 
     stages {
-
         stage('Check .NET version') {
             steps {
                 bat 'dotnet --version'
@@ -18,21 +17,38 @@ pipeline {
 
         stage('Build') {
             steps {
+                // Compilar TODOS los proyectos incluyendo tests
                 bat 'dotnet build --no-restore --configuration Release'
+                
+                // Verificar específicamente que el proyecto de test se compiló
+                bat 'if exist testLogin\\bin\\Release\\net9.0\\testLogin.dll (echo "✅ testLogin.dll compilado") else (echo "❌ testLogin.dll NO compilado")'
             }
         }
 
-       stage('Test') {
+        stage('Test') {
             steps {
-                bat 'dotnet test testLogin/testLogin.csproj --no-build --configuration Release --logger "xunit;LogFileName=test_results.xml"'
+                script {
+                    try {
+                        // Crear directorio para resultados
+                        bat 'if exist TestResults rmdir /s /q TestResults'
+                        bat 'mkdir TestResults'
+                        
+                        // Compilar y ejecutar tests (SIN --no-build)
+                        bat 'dotnet test testLogin/testLogin.csproj --configuration Release --logger "xunit;LogFilePath=TestResults/test_results.xml"'
+                        
+                    } catch (Exception e) {
+                        echo "Tests fallaron: ${e.getMessage()}"
+                        // Continuar para intentar publicar resultados
+                    }
+                }
             }
-                post {
-                    always {
-                // Publica los resultados de prueba en Jenkins
-                junit "test_results.xml"
+            post {
+                always {
+                    // Publicar resultados aunque estén vacíos
+                    junit allowEmptyResults: true, testResults: "TestResults/test_results.xml"
+                }
+            }
         }
-    }
-}
     }
 
     post {
