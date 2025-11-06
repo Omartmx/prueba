@@ -15,7 +15,7 @@ namespace BlazorLoginApp.Tests // Asegúrate que coincida con tu namespace
             var component = RenderComponent<Login>();
     
             component.Find("input#email").Change("admin@test.com");
-            component.Find("input#password").Change("12345");
+            component.Find("input#password").Change("123456");
             component.Find("button").Click();
 
             Assert.Contains("¡Login exitoso!", component.Markup);
