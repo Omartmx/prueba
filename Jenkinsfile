@@ -2,6 +2,7 @@ pipeline {
     agent any
 
     stages {
+
         stage('Check .NET version') {
             steps {
                 bat 'dotnet --version'
@@ -17,32 +18,21 @@ pipeline {
 
         stage('Build') {
             steps {
-                // Compilar específicamente el proyecto de test también
-                bat 'dotnet build testLogin/testLogin.csproj --no-restore --configuration Release'
-                
-                // Verificar que el proyecto de test se compiló
-                bat 'dir testLogin\\bin\\Release /s'
+                bat 'dotnet build --no-restore --configuration Release'
             }
         }
 
-        stage('Test') {
+       stage('Test') {
             steps {
-                // Crear directorio para resultados
-                bat 'if exist TestResults rmdir /s /q TestResults'
-                bat 'mkdir TestResults'
-                
-                // Ejecutar tests
-                bat 'dotnet test testLogin/testLogin.csproj --configuration Release --logger "xunit;LogFilePath=TestResults/test_results.xml"'
-                
-                // Verificar si se creó el archivo de resultados
-                bat 'if exist TestResults\\test_results.xml (echo "✅ Archivo de resultados creado") else (echo "❌ Archivo de resultados NO creado")'
+                bat 'dotnet test testLogin/testLogin.csproj --no-build --configuration Release --logger "xunit;LogFileName=test_results.xml"'
             }
-            post {
-                always {
-                    junit "TestResults/test_results.xml"
-                }
-            }
+                post {
+                    always {
+                // Publica los resultados de prueba en Jenkins
+                junit "test_results.xml"
         }
+    }
+}
     }
 
     post {
