@@ -26,14 +26,19 @@ pipeline {
             steps {
                 script {
                     try {
+                        // Limpiar resultados anteriores
                         bat 'if exist TestResults rmdir /s /q TestResults'
-                        bat 'mkdir TestResults'
+                        bat 'if exist testLogin\\TestResults rmdir /s /q testLogin\\TestResults'
                         
-                        // USAR TRX LOGGER (siempre disponible)
-                        bat 'dotnet test testLogin/testLogin.csproj --configuration Release --logger "trx;LogFileName=TestResults/results.trx"'
+                        // Ejecutar tests - el TRX se guarda automáticamente en testLogin/TestResults
+                        bat 'dotnet test testLogin/testLogin.csproj --configuration Release --logger "trx;LogFileName=results.trx"'
                         
-                        // Verificar que se creó el archivo
-                        bat 'if exist TestResults\\results.trx (echo "✅ Archivo TRX creado") else (echo "❌ Archivo TRX NO creado")'
+                        // Verificar dónde se creó el archivo
+                        bat 'echo === BUSCANDO ARCHIVOS TRX ==='
+                        bat 'dir /s *.trx'
+                        
+                        // Copiar el archivo a una ubicación estándar si es necesario
+                        bat 'if exist testLogin\\TestResults\\results.trx (echo "✅ TRX encontrado en testLogin/TestResults" && copy testLogin\\TestResults\\results.trx TestResults\\) || echo "TRX no encontrado"'
                         
                     } catch (Exception e) {
                         echo "Tests fallaron: ${e.getMessage()}"
@@ -42,8 +47,8 @@ pipeline {
             }
             post {
                 always {
-                    // Jenkins puede leer archivos TRX
-                    junit allowEmptyResults: true, testResults: "TestResults/*.trx"
+                    // Buscar TRX en múltiples ubicaciones posibles
+                    junit allowEmptyResults: true, testResults: "**/results.trx"
                 }
             }
         }
