@@ -30,7 +30,7 @@ pipeline {
             post {
                 always {
                     // Publica los resultados de prueba en Jenkins
-                    junit '**/test_results.xml'
+                    junit '**/test_results/*.xml'
                 }
             }
         }
